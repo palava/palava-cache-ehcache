@@ -25,17 +25,18 @@ import java.util.concurrent.TimeUnit;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
+import net.sf.ehcache.Element;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
-import org.jdom.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
-import de.cosmocode.palava.AbstractService;
-import de.cosmocode.palava.Server;
 import de.cosmocode.palava.ServiceInitializationException;
+import de.cosmocode.palava.core.service.lifecycle.Initializable;
+import de.cosmocode.palava.core.service.lifecycle.Startable;
 
 /**
  * An implementation of the {@link CacheService} interface
@@ -43,100 +44,87 @@ import de.cosmocode.palava.ServiceInitializationException;
  *
  * @author Willi Schoenborn
  */
-public class EhCacheService extends AbstractService implements CacheService {
+public class EhCacheService implements CacheService, Initializable, Startable {
 
     private static final Logger log = LoggerFactory.getLogger(EhCacheService.class);
 
+    @Inject
+    @Named("ehcache.maxElementsInMemory")
     private int maxElementsInMemory;
-    
+
     private MemoryStoreEvictionPolicy memoryStoreEvictionPolicy;
-    
+
+    @Inject
+    @Named("ehcache.overflowToDisk")
     private boolean overflowToDisk;
-    
+
+    @Inject
+    @Named("ehcache.diskStorePath")
     private String diskStorePath;
-    
+
+    @Inject
+    @Named("ehcache.eternal")
     private boolean eternal;
-    
+
+    @Inject
+    @Named("ehcache.timeToLive")
     private long timeToLive;
-    
+
+    @Inject
+    @Named("ehcache.timeToLiveUnit")
     private TimeUnit timeToLiveUnit;
-    
+
+    @Inject
+    @Named("ehcache.timeToIdle")
     private long timeToIdle;
-    
+
+    @Inject
+    @Named("ehcache.timeToIdleUnit")
     private TimeUnit timeToIdleUnit;
-    
+
+    @Inject
+    @Named("ehcache.diskPersistent")
     private boolean diskPersistent;
-    
+
+    @Inject
+    @Named("ehcache.diskExpiryThreadInterval")
     private long diskExpiryThreadInterval;
-    
+
+    @Inject
+    @Named("ehcache.diskExpiryThreadIntervalUnit")
     private TimeUnit diskExpiryThreadIntervalUnit;
-    
+
+    @Inject
+    @Named("ehcache.maxElementsOnDisk")
     private int maxElementsOnDisk;
-    
+
+    @Inject
+    @Named("ehcache.diskSpoolBufferSizeMB")
     private int diskSpoolBufferSizeMB;
-    
+
+    @Inject
+    @Named("ehcache.clearOnFlush")
     private boolean clearOnFlush;
-    
+
+    @Inject
+    @Named("ehcache.isTerracottaClustered")
     private boolean isTerracottaClustered;
-    
+
+    @Inject
+    @Named("ehcache.terracottaValueMode")
     private String terracottaValueMode;
-    
+
+    @Inject
+    @Named("ehcache.terracottaCoherentReads")
     private boolean terracottaCoherentReads;
-    
+
     private CacheManager manager;
     
     private Ehcache cache;
     
-    @Override
-    public void configure(Element root, Server neverUsed) {
-        this.maxElementsInMemory = Integer.parseInt(Preconditions.checkNotNull(
-            root.getChildText("maxElementsInMemory"), "MaxElementsInMemory"));
-        final CacheMode cacheMode = CacheMode.valueOf(Preconditions.checkNotNull(
-            root.getChildText("cacheMode"), "CacheMode").toUpperCase());
+    @Inject
+    void setMemoryStoreEvictionPolicy(@Named("ehcache.cacheMode") CacheMode cacheMode) {
         this.memoryStoreEvictionPolicy = of(cacheMode);
-        this.overflowToDisk = Boolean.parseBoolean(Preconditions.checkNotNull(
-            root.getChildText("overflowToDisk"), "OverflowToDistk"));
-        this.diskStorePath = Preconditions.checkNotNull(root.getChildText("diskStorePath"), "DiskStorePath");
-        this.eternal = Boolean.parseBoolean(Preconditions.checkNotNull(
-            root.getChildText("eternal"), "Eternal"));
-        this.timeToLive = Long.parseLong(Preconditions.checkNotNull(
-            root.getChildText("timeToLive"), "TimeToLive"));
-        this.timeToLiveUnit = TimeUnit.valueOf(Preconditions.checkNotNull(
-            root.getChildText("timeToLiveUnit"), "TimeToLiveUnit").toUpperCase());
-        this.timeToIdle = Long.parseLong(Preconditions.checkNotNull(
-            root.getChildText("timeToIdle"), "TimeToIdle"));
-        this.timeToIdleUnit = TimeUnit.valueOf(Preconditions.checkNotNull(
-            root.getChildText("timeToIdleUnit"), "TimeToIdleUnit").toUpperCase());
-        this.diskPersistent = Boolean.parseBoolean(Preconditions.checkNotNull(
-            root.getChildText("diskPersistent"), "DiskPersistent"));
-        this.diskExpiryThreadInterval = Long.parseLong(Preconditions.checkNotNull(
-            root.getChildText("diskExpiryThreadInterval"), "DiskExpiryThreadInterval"));
-        this.diskExpiryThreadIntervalUnit = TimeUnit.valueOf(Preconditions.checkNotNull(
-            root.getChildText("diskExpiryThreadIntervalUnit"), "DiskExpiryThreadIntervalUnit").toUpperCase());
-        this.maxElementsOnDisk = Integer.parseInt(Preconditions.checkNotNull(
-            root.getChildText("maxElementsOnDisk"), "MaxElementsOnDisk"));
-        this.diskSpoolBufferSizeMB = Integer.parseInt(Preconditions.checkNotNull(
-            root.getChildText("diskSpoolBufferSize"), "DiskSpoolBufferSize"));
-        this.clearOnFlush = Boolean.parseBoolean(Preconditions.checkNotNull(
-            root.getChildText("clearOnFlush"), "ClearOnFlush"));
-        this.isTerracottaClustered = Boolean.parseBoolean(Preconditions.checkNotNull(
-            root.getChildText("isTerracottaClustered"), "IsTerracottaClustered"));
-        this.terracottaValueMode = Preconditions.checkNotNull(
-            root.getChildText("terracottaValueMode"), "TerracottaValueMode");
-        this.terracottaCoherentReads = Boolean.parseBoolean(Preconditions.checkNotNull(
-            root.getChildText("terracottaCoherentReads"), "TerracottaCoherentReads"));
-
-        log.info("Ehcache: [clearOnFlush={}, diskExpiryThreadInterval={}, diskExpiryThreadIntervalUnit={}, " +
-            "diskPersistent={}, diskSpoolBufferSizeMB={}, diskStorePath={}, eternal={}, isTerracottaClustered={}, " +
-            "maxElementsInMemory={}, maxElementsOnDisk={}, memoryStoreEvictionPolicy={}, overflowToDisk={}, " +
-            "terracottaCoherentReads={}, terracottaValueMode={}, timeToIdle={}, timeToIdleUnit={}, timeToLive={}, " +
-            "timeToLiveUnit={}]", new Object[] {
-                clearOnFlush, diskExpiryThreadInterval, diskExpiryThreadIntervalUnit, diskPersistent,
-                diskSpoolBufferSizeMB, diskStorePath, eternal, isTerracottaClustered, maxElementsInMemory,
-                maxElementsOnDisk, memoryStoreEvictionPolicy, overflowToDisk, terracottaCoherentReads,
-                terracottaValueMode, timeToIdle, timeToIdleUnit, timeToLive, timeToLiveUnit
-            }
-        );
     }
     
     private MemoryStoreEvictionPolicy of(CacheMode mode) {
@@ -158,7 +146,22 @@ public class EhCacheService extends AbstractService implements CacheService {
     
     @Override
     public void initialize() throws ServiceInitializationException {
+        log.info("Ehcache: [clearOnFlush={}, diskExpiryThreadInterval={}, diskExpiryThreadIntervalUnit={}, " +
+            "diskPersistent={}, diskSpoolBufferSizeMB={}, diskStorePath={}, eternal={}, isTerracottaClustered={}, " +
+            "maxElementsInMemory={}, maxElementsOnDisk={}, memoryStoreEvictionPolicy={}, overflowToDisk={}, " +
+            "terracottaCoherentReads={}, terracottaValueMode={}, timeToIdle={}, timeToIdleUnit={}, timeToLive={}, " +
+            "timeToLiveUnit={}]", new Object[] {
+                clearOnFlush, diskExpiryThreadInterval, diskExpiryThreadIntervalUnit, diskPersistent,
+                diskSpoolBufferSizeMB, diskStorePath, eternal, isTerracottaClustered, maxElementsInMemory,
+                maxElementsOnDisk, memoryStoreEvictionPolicy, overflowToDisk, terracottaCoherentReads,
+                terracottaValueMode, timeToIdle, timeToIdleUnit, timeToLive, timeToLiveUnit
+            }
+        );
         manager = CacheManager.create();
+    }
+    
+    @Override
+    public void start() {
         final String name = getClass().getName();
         manager.addCache(new Cache(
             name,
@@ -184,7 +187,7 @@ public class EhCacheService extends AbstractService implements CacheService {
     
     @Override
     public void store(Serializable key, Object value) {
-        final net.sf.ehcache.Element element = new net.sf.ehcache.Element(key, value);
+        final Element element = new Element(key, value);
         cache.putQuiet(element);
     }
     
@@ -207,7 +210,7 @@ public class EhCacheService extends AbstractService implements CacheService {
     }
     
     @Override
-    public void shutdown() {
+    public void stop() {
         manager.shutdown();
     }
     
