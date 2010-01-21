@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import de.cosmocode.palava.ServiceInitializationException;
 import de.cosmocode.palava.core.service.lifecycle.Initializable;
 import de.cosmocode.palava.core.service.lifecycle.Startable;
 
@@ -145,7 +144,7 @@ public class EhCacheService implements CacheService, Initializable, Startable {
     }
     
     @Override
-    public void initialize() throws ServiceInitializationException {
+    public void initialize() {
         log.info("Ehcache: [clearOnFlush={}, diskExpiryThreadInterval={}, diskExpiryThreadIntervalUnit={}, " +
             "diskPersistent={}, diskSpoolBufferSizeMB={}, diskStorePath={}, eternal={}, isTerracottaClustered={}, " +
             "maxElementsInMemory={}, maxElementsOnDisk={}, memoryStoreEvictionPolicy={}, overflowToDisk={}, " +
