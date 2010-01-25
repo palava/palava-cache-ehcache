@@ -47,9 +47,7 @@ public class EhCacheService implements CacheService, Initializable, Startable {
 
     private static final Logger log = LoggerFactory.getLogger(EhCacheService.class);
 
-    @Inject
-    @Named("ehcache.maxElementsInMemory")
-    private int maxElementsInMemory;
+    private int maxElementsInMemory = 1000;
 
     private MemoryStoreEvictionPolicy memoryStoreEvictionPolicy;
 
@@ -121,9 +119,19 @@ public class EhCacheService implements CacheService, Initializable, Startable {
     
     private Ehcache cache;
     
+    /*
+     * - package private
+     * - @Inject (ggf optional = true
+     * - @Named("...") am Parameters
+     */
     @Inject
     void setMemoryStoreEvictionPolicy(@Named("ehcache.cacheMode") CacheMode cacheMode) {
         this.memoryStoreEvictionPolicy = of(cacheMode);
+    }
+    
+    @Inject(optional = true)
+    void setMaxElementsInMemory(@Named("ehcache.maxElementsInMemory") int maxElementsInMemory) {
+        this.maxElementsInMemory = maxElementsInMemory;
     }
     
     private MemoryStoreEvictionPolicy of(CacheMode mode) {

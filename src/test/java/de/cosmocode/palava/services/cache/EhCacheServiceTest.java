@@ -19,20 +19,19 @@
 
 package de.cosmocode.palava.services.cache;
 
-import junit.framework.JUnit4TestAdapter;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
+/**
+ * TODO
+ *
+ * @author Markus Baumann
+ */
 public class EhCacheServiceTest extends CacheServiceTest {
 
-	/**
-	 * Creates {@link Test}
-	 * 
-	 *  @return {@link Test}
-	 */
-
-	public CacheService create(){
-		return new EhCacheService();
-	}
+    @Override
+    public CacheService create() {
+        final EhCacheService service = new EhCacheService();
+        service.initialize();
+        service.start();
+        return service;
+    }
+    
 }
