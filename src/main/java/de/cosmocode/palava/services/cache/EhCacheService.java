@@ -34,8 +34,8 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import de.cosmocode.palava.core.service.lifecycle.Initializable;
-import de.cosmocode.palava.core.service.lifecycle.Startable;
+import de.cosmocode.palava.core.lifecycle.Initializable;
+import de.cosmocode.palava.core.lifecycle.Startable;
 
 /**
  * An implementation of the {@link CacheService} interface
