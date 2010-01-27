@@ -34,8 +34,8 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import de.cosmocode.palava.core.lifecycle.Disposable;
 import de.cosmocode.palava.core.lifecycle.Initializable;
-import de.cosmocode.palava.core.lifecycle.Startable;
 
 /**
  * An implementation of the {@link CacheService} interface
@@ -43,7 +43,7 @@ import de.cosmocode.palava.core.lifecycle.Startable;
  *
  * @author Willi Schoenborn
  */
-public class EhCacheService implements CacheService, Initializable, Startable {
+public class EhCacheService implements CacheService, Initializable, Disposable {
 
     private static final Logger log = LoggerFactory.getLogger(EhCacheService.class);
 
@@ -165,12 +165,8 @@ public class EhCacheService implements CacheService, Initializable, Startable {
             }
         );
         manager = CacheManager.create();
-    }
-    
-    @Override
-    public void start() {
         final String name = getClass().getName();
-        manager.addCache(new Cache(
+        this.cache = new Cache(
             name,
             maxElementsInMemory,
             memoryStoreEvictionPolicy,
@@ -189,7 +185,8 @@ public class EhCacheService implements CacheService, Initializable, Startable {
             isTerracottaClustered,
             terracottaValueMode,
             terracottaCoherentReads
-        ));
+        );
+        manager.addCache(cache);
     }
     
     @Override
@@ -217,7 +214,7 @@ public class EhCacheService implements CacheService, Initializable, Startable {
     }
     
     @Override
-    public void stop() {
+    public void dispose() {
         manager.shutdown();
     }
     

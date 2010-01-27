@@ -33,7 +33,6 @@ public class EhCacheServiceTest extends CacheServiceTest {
         // TODO call setter
         
         service.initialize();
-        service.start();
         return service;
     }
     
