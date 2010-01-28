@@ -203,7 +203,7 @@ public class EhCacheService implements CacheService, Initializable, Disposable {
     
     @Override
     public <T> T remove(Serializable key) {
-        final T value = read(key);
+        final T value = this.<T>read(key);
         cache.remove(key);
         return value;
     }
