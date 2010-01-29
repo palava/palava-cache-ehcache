@@ -19,6 +19,11 @@
           <version>1.7.2</version>
       </dependency>
       <dependency>
+          <groupId>de.cosmocode.palava</groupId>
+          <artifactId>palava-core</artifactId>
+          <version>2.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
           <groupId>de.cosmocode.palava.services</groupId>
           <artifactId>palava-cache</artifactId>
           <version>2.0-SNAPSHOT</version>
@@ -26,8 +31,8 @@
     <dependency>
         <groupId>de.cosmocode.palava.services</groupId>
         <artifactId>palava-cache</artifactId>
-        <version>2.0-SNAPSHOT</version>
-        <type>test-jar</type>
+        <version>${version}</version>
+        <type>test</type>
         <scope>test</scope>
     </dependency>
     <dependency>

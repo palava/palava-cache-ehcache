@@ -47,7 +47,7 @@ public class EhCacheService implements CacheService, Initializable, Disposable {
 
     private static final Logger log = LoggerFactory.getLogger(EhCacheService.class);
 
-    private int maxElementsInMemory = 1000;
+    private int maxElementsInMemory = 10000;
 
     private MemoryStoreEvictionPolicy memoryStoreEvictionPolicy;
 
@@ -63,13 +63,11 @@ public class EhCacheService implements CacheService, Initializable, Disposable {
     @Named("ehcache.eternal")
     private boolean eternal;
 
-    @Inject
-    @Named("ehcache.timeToLive")
-    private long timeToLive;
+    private long timeToLive = 600L;
 
     @Inject
     @Named("ehcache.timeToLiveUnit")
-    private TimeUnit timeToLiveUnit;
+    private TimeUnit timeToLiveUnit = TimeUnit.SECONDS;
 
     @Inject
     @Named("ehcache.timeToIdle")
@@ -77,7 +75,7 @@ public class EhCacheService implements CacheService, Initializable, Disposable {
 
     @Inject
     @Named("ehcache.timeToIdleUnit")
-    private TimeUnit timeToIdleUnit;
+    private TimeUnit timeToIdleUnit = TimeUnit.SECONDS;
 
     @Inject
     @Named("ehcache.diskPersistent")
@@ -89,7 +87,7 @@ public class EhCacheService implements CacheService, Initializable, Disposable {
 
     @Inject
     @Named("ehcache.diskExpiryThreadIntervalUnit")
-    private TimeUnit diskExpiryThreadIntervalUnit;
+    private TimeUnit diskExpiryThreadIntervalUnit = TimeUnit.SECONDS;
 
     @Inject
     @Named("ehcache.maxElementsOnDisk")
@@ -134,6 +132,11 @@ public class EhCacheService implements CacheService, Initializable, Disposable {
         this.maxElementsInMemory = maxElementsInMemory;
     }
     
+    @Inject(optional = true)
+    void setTimeToLive(@Named("ehcache.timeToLive") long timeToLive) {
+        this.timeToLive = timeToLive;
+    }
+    
     private MemoryStoreEvictionPolicy of(CacheMode mode) {
         switch (mode) {
             case LRU: {
@@ -166,39 +169,47 @@ public class EhCacheService implements CacheService, Initializable, Disposable {
         );
         manager = CacheManager.create();
         final String name = getClass().getName();
-        this.cache = new Cache(
-            name,
-            maxElementsInMemory,
-            memoryStoreEvictionPolicy,
-            overflowToDisk,
-            diskStorePath,
-            eternal,
-            timeToLiveUnit.toSeconds(timeToLive),
-            timeToIdleUnit.toSeconds(timeToIdle),
-            diskPersistent,
-            diskExpiryThreadIntervalUnit.toSeconds(diskExpiryThreadInterval),
-            null,
-            null, 
-            maxElementsOnDisk,
-            diskSpoolBufferSizeMB,
-            clearOnFlush,
-            isTerracottaClustered,
-            terracottaValueMode,
-            terracottaCoherentReads
+        cache = new Cache(
+                name,
+                maxElementsInMemory,
+                memoryStoreEvictionPolicy,
+                overflowToDisk,
+                diskStorePath,
+                eternal, 
+                timeToLiveUnit.toSeconds(timeToLive),
+                timeToIdleUnit.toSeconds(timeToIdle),
+                diskPersistent,
+                diskExpiryThreadIntervalUnit.toSeconds(diskExpiryThreadInterval),
+                null,
+                null, 
+                maxElementsOnDisk,
+                diskSpoolBufferSizeMB,
+                clearOnFlush,
+                isTerracottaClustered,
+                terracottaValueMode,
+                terracottaCoherentReads
         );
+        if (manager.cacheExists(name)) {
+            manager.removeCache(name);
+        }
         manager.addCache(cache);
     }
     
     @Override
     public void store(Serializable key, Object value) {
-        final Element element = new Element(key, value);
-        cache.putQuiet(element);
+        if (key == null) {
+            throw new NullPointerException();
+        } else {
+            final Element element = new Element(key, value);
+            cache.putQuiet(element);
+        }
     }
     
     @Override
     @SuppressWarnings("unchecked")
     public <T> T read(Serializable key) {
-        return (T) cache.get(key);
+        final Element element = cache.get(key);
+        return element == null ? null : (T) element.getValue();
     }
     
     @Override
@@ -218,4 +229,13 @@ public class EhCacheService implements CacheService, Initializable, Disposable {
         manager.shutdown();
     }
     
+    @Override
+    public String toString() {
+        return cache.toString();
+    }
+    
+    Ehcache getCache() {
+        return cache;
+    }
 }
+

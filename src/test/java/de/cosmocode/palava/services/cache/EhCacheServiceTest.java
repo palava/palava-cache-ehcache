@@ -19,6 +19,8 @@
 
 package de.cosmocode.palava.services.cache;
 
+import net.sf.ehcache.Status;
+
 import org.junit.Ignore;
 
 /**
@@ -32,11 +34,12 @@ public class EhCacheServiceTest extends CacheServiceTest {
     @Override
     public CacheService create() {
         final EhCacheService service = new EhCacheService();
-        
         // TODO call setter
-        
         service.initialize();
+        
+        if (service.getCache().getStatus().equals(Status.STATUS_UNINITIALISED)) {
+            service.getCache().initialise();
+        }
         return service;
     }
-    
 }
