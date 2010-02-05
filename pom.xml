@@ -10,7 +10,7 @@
   <artifactId>palava-cache-ehcache</artifactId>
   <name>Palava Cache Ehcache</name>
   <scm>
-    <developerConnection>scm:svn:http://palava.svn.cosmocode.de/palava-cache-ehcache/trunk</developerConnection>
+    <developerConnection>scm:svn:https://palava.svn.cosmocode.de/palava-cache-ehcache/trunk</developerConnection>
   </scm>
   <dependencies>
       <dependency>
