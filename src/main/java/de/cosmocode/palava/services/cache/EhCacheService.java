@@ -31,6 +31,7 @@ import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -197,23 +198,22 @@ public class EhCacheService implements CacheService, Initializable, Disposable {
     
     @Override
     public void store(Serializable key, Object value) {
-        if (key == null) {
-            throw new NullPointerException();
-        } else {
-            final Element element = new Element(key, value);
-            cache.putQuiet(element);
-        }
+        Preconditions.checkNotNull(key, "Key");
+        final Element element = new Element(key, value);
+        cache.putQuiet(element);
     }
     
     @Override
     @SuppressWarnings("unchecked")
     public <T> T read(Serializable key) {
+    	Preconditions.checkNotNull(key, "Key");
         final Element element = cache.get(key);
         return element == null ? null : (T) element.getValue();
     }
     
     @Override
     public <T> T remove(Serializable key) {
+    	Preconditions.checkNotNull(key, "Key");
         final T value = this.<T>read(key);
         cache.remove(key);
         return value;

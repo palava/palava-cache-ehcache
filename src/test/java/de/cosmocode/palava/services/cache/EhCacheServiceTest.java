@@ -28,7 +28,6 @@ import org.junit.Ignore;
  *
  * @author Markus Baumann
  */
-@Ignore
 public class EhCacheServiceTest extends CacheServiceTest {
 
     @Override
