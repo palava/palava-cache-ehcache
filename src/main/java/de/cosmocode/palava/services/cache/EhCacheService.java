@@ -45,7 +45,7 @@ import de.cosmocode.palava.core.lifecycle.Initializable;
  */
 public class EhCacheService implements CacheService, Initializable, Disposable {
 
-    private static final Logger log = LoggerFactory.getLogger(EhCacheService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EhCacheService.class);
 
     private int maxElementsInMemory = 10000;
 
@@ -156,7 +156,7 @@ public class EhCacheService implements CacheService, Initializable, Disposable {
     
     @Override
     public void initialize() {
-        log.info("Ehcache: [clearOnFlush={}, diskExpiryThreadInterval={}, diskExpiryThreadIntervalUnit={}, " +
+        LOG.info("Ehcache: [clearOnFlush={}, diskExpiryThreadInterval={}, diskExpiryThreadIntervalUnit={}, " +
             "diskPersistent={}, diskSpoolBufferSizeMB={}, diskStorePath={}, eternal={}, isTerracottaClustered={}, " +
             "maxElementsInMemory={}, maxElementsOnDisk={}, memoryStoreEvictionPolicy={}, overflowToDisk={}, " +
             "terracottaCoherentReads={}, terracottaValueMode={}, timeToIdle={}, timeToIdleUnit={}, timeToLive={}, " +
