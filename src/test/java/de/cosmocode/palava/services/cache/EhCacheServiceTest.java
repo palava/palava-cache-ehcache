@@ -21,8 +21,6 @@ package de.cosmocode.palava.services.cache;
 
 import net.sf.ehcache.Status;
 
-import org.junit.Ignore;
-
 /**
  * TODO handle NPEs
  *
