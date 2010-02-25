@@ -42,6 +42,11 @@ import de.cosmocode.palava.core.lifecycle.Initializable;
  * An implementation of the {@link CacheService} interface
  * which uses <a href="http://ehcache.org/">Ehcache</a>.
  *
+ * TODO
+ * - package private
+ * - @Inject (ggf optional = true
+ * - @Named("...") am Parameters
+ * 
  * @author Willi Schoenborn
  */
 public class EhCacheService implements CacheService, Initializable, Disposable {
@@ -118,11 +123,6 @@ public class EhCacheService implements CacheService, Initializable, Disposable {
     
     private Ehcache cache;
     
-    /*
-     * - package private
-     * - @Inject (ggf optional = true
-     * - @Named("...") am Parameters
-     */
     @Inject
     void setMemoryStoreEvictionPolicy(@Named("ehcache.cacheMode") CacheMode cacheMode) {
         this.memoryStoreEvictionPolicy = of(cacheMode);
@@ -206,14 +206,14 @@ public class EhCacheService implements CacheService, Initializable, Disposable {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T read(Serializable key) {
-    	Preconditions.checkNotNull(key, "Key");
+        Preconditions.checkNotNull(key, "Key");
         final Element element = cache.get(key);
         return element == null ? null : (T) element.getValue();
     }
     
     @Override
     public <T> T remove(Serializable key) {
-    	Preconditions.checkNotNull(key, "Key");
+        Preconditions.checkNotNull(key, "Key");
         final T value = this.<T>read(key);
         cache.remove(key);
         return value;
@@ -237,5 +237,6 @@ public class EhCacheService implements CacheService, Initializable, Disposable {
     Ehcache getCache() {
         return cache;
     }
+    
 }
 
