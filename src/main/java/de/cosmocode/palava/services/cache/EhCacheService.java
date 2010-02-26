@@ -96,7 +96,7 @@ class EhCacheService implements CacheService, Initializable, Disposable {
      * @param eternal if true, the cached elements never expire
      */
     @Inject
-    public EhCacheService(
+    EhCacheService(
         @Named("ehcache.overflowToDisk") final boolean overflowToDisk,
         @Named("ehcache.eternal") final boolean eternal) {
         
@@ -111,29 +111,29 @@ class EhCacheService implements CacheService, Initializable, Disposable {
     }
 
     @Inject(optional = true)
-    public void setDiskExpiryThreadInterval(
+    void setDiskExpiryThreadInterval(
             @Named("ehcache.diskExpiryThreadInterval") long diskExpiryThreadInterval) {
         this.diskExpiryThreadInterval = diskExpiryThreadInterval;
     }
     
     @Inject(optional = true)
-    public void setDiskExpiryThreadIntervalUnit(
+    void setDiskExpiryThreadIntervalUnit(
             @Named("ehcache.diskExpiryThreadIntervalUnit") TimeUnit diskExpiryThreadIntervalUnit) {
         this.diskExpiryThreadIntervalUnit = diskExpiryThreadIntervalUnit;
     }
     
     @Inject(optional = true)
-    public void setDiskPersistent(@Named("ehcache.diskPersistent") boolean diskPersistent) {
+    void setDiskPersistent(@Named("ehcache.diskPersistent") boolean diskPersistent) {
         this.diskPersistent = diskPersistent;
     }
     
     @Inject(optional = true)
-    public void setDiskStorePath(@Named("ehcache.diskStorePath") String diskStorePath) {
+    void setDiskStorePath(@Named("ehcache.diskStorePath") String diskStorePath) {
         this.diskStorePath = diskStorePath;
     }
     
     @Inject(optional = true)
-    public void setDiskSpoolBufferSizeMB(@Named("ehcache.diskSpoolBufferSizeMB") int diskSpoolBufferSizeMB) {
+    void setDiskSpoolBufferSizeMB(@Named("ehcache.diskSpoolBufferSizeMB") int diskSpoolBufferSizeMB) {
         this.diskSpoolBufferSizeMB = diskSpoolBufferSizeMB;
     }
     
@@ -143,7 +143,7 @@ class EhCacheService implements CacheService, Initializable, Disposable {
     }
 
     @Inject(optional = true)
-    public void setMaxElementsOnDisk(@Named("ehcache.maxElementsOnDisk") int maxElementsOnDisk) {
+    void setMaxElementsOnDisk(@Named("ehcache.maxElementsOnDisk") int maxElementsOnDisk) {
         this.maxElementsOnDisk = maxElementsOnDisk;
     }
 
@@ -168,12 +168,12 @@ class EhCacheService implements CacheService, Initializable, Disposable {
     }
 
     @Inject(optional = true)
-    public void setTimeToIdle(@Named("ehcache.timeToIdle") long timeToIdle) {
+    void setTimeToIdle(@Named("ehcache.timeToIdle") long timeToIdle) {
         this.timeToIdle = timeToIdle;
     }
 
     @Inject(optional = true)
-    public void setTimeToIdleUnit(@Named("ehcache.timeToIdleUnit") TimeUnit timeToIdleUnit) {
+    void setTimeToIdleUnit(@Named("ehcache.timeToIdleUnit") TimeUnit timeToIdleUnit) {
         this.timeToIdleUnit = timeToIdleUnit;
     }
     
@@ -183,7 +183,7 @@ class EhCacheService implements CacheService, Initializable, Disposable {
     }
     
     @Inject(optional = true)
-    public void setTimeToLiveUnit(@Named("ehcache.timeToLiveUnit") TimeUnit timeToLiveUnit) {
+    void setTimeToLiveUnit(@Named("ehcache.timeToLiveUnit") TimeUnit timeToLiveUnit) {
         this.timeToLiveUnit = timeToLiveUnit;
     }
     
