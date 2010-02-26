@@ -30,7 +30,7 @@ public class EhCacheServiceTest extends CacheServiceTest {
 
     @Override
     public CacheService create() {
-        final EhCacheService service = new EhCacheService();
+        final EhCacheService service = new EhCacheService(false, true);
         // TODO call setter
         service.initialize();
         

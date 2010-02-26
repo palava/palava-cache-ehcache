@@ -42,95 +42,139 @@ import de.cosmocode.palava.core.lifecycle.Initializable;
  * An implementation of the {@link CacheService} interface
  * which uses <a href="http://ehcache.org/">Ehcache</a>.
  *
- * TODO
- * - package private
- * - @Inject (ggf optional = true
- * - @Named("...") am Parameters
- * 
  * @author Willi Schoenborn
+ * @author Oliver Lorenz
  */
-public class EhCacheService implements CacheService, Initializable, Disposable {
+class EhCacheService implements CacheService, Initializable, Disposable {
 
     private static final Logger LOG = LoggerFactory.getLogger(EhCacheService.class);
 
     private int maxElementsInMemory = 10000;
 
-    private MemoryStoreEvictionPolicy memoryStoreEvictionPolicy;
+    private MemoryStoreEvictionPolicy memoryStoreEvictionPolicy = MemoryStoreEvictionPolicy.LRU;
 
-    @Inject
-    @Named("ehcache.overflowToDisk")
-    private boolean overflowToDisk;
+    private final boolean overflowToDisk;
 
-    @Inject
-    @Named("ehcache.diskStorePath")
     private String diskStorePath;
 
-    @Inject
-    @Named("ehcache.eternal")
-    private boolean eternal;
+    private final boolean eternal;
 
     private long timeToLive = 600L;
 
-    @Inject
-    @Named("ehcache.timeToLiveUnit")
     private TimeUnit timeToLiveUnit = TimeUnit.SECONDS;
 
-    @Inject
-    @Named("ehcache.timeToIdle")
-    private long timeToIdle;
+    private long timeToIdle = 600L;
 
-    @Inject
-    @Named("ehcache.timeToIdleUnit")
     private TimeUnit timeToIdleUnit = TimeUnit.SECONDS;
 
-    @Inject
-    @Named("ehcache.diskPersistent")
     private boolean diskPersistent;
 
-    @Inject
-    @Named("ehcache.diskExpiryThreadInterval")
     private long diskExpiryThreadInterval;
 
-    @Inject
-    @Named("ehcache.diskExpiryThreadIntervalUnit")
     private TimeUnit diskExpiryThreadIntervalUnit = TimeUnit.SECONDS;
 
-    @Inject
-    @Named("ehcache.maxElementsOnDisk")
     private int maxElementsOnDisk;
 
-    @Inject
-    @Named("ehcache.diskSpoolBufferSizeMB")
     private int diskSpoolBufferSizeMB;
 
-    @Inject
-    @Named("ehcache.clearOnFlush")
-    private boolean clearOnFlush;
+    private boolean clearOnFlush = true;
 
-    @Inject
-    @Named("ehcache.isTerracottaClustered")
     private boolean isTerracottaClustered;
 
-    @Inject
-    @Named("ehcache.terracottaValueMode")
     private String terracottaValueMode;
 
-    @Inject
-    @Named("ehcache.terracottaCoherentReads")
-    private boolean terracottaCoherentReads;
+    private boolean terracottaCoherentReads = true;
 
     private CacheManager manager;
     
     private Ehcache cache;
     
+    
+    /**
+     * Injected constructor. Sets overflowToDisk.
+     * @param overflowToDisk if true, then the cache puts elements onto the disk if the memory is full
+     * @param eternal if true, the cached elements never expire
+     */
     @Inject
-    void setMemoryStoreEvictionPolicy(@Named("ehcache.cacheMode") CacheMode cacheMode) {
-        this.memoryStoreEvictionPolicy = of(cacheMode);
+    public EhCacheService(
+        @Named("ehcache.overflowToDisk") final boolean overflowToDisk,
+        @Named("ehcache.eternal") final boolean eternal) {
+        
+        this.overflowToDisk = overflowToDisk;
+        this.eternal = eternal;
+    }
+    
+    
+    @Inject(optional = true)
+    void setClearOnFlush(@Named("ehcache.clearOnFlush") boolean clearOnFlush) {
+        this.clearOnFlush = clearOnFlush;
+    }
+
+    @Inject(optional = true)
+    public void setDiskExpiryThreadInterval(
+            @Named("ehcache.diskExpiryThreadInterval") long diskExpiryThreadInterval) {
+        this.diskExpiryThreadInterval = diskExpiryThreadInterval;
+    }
+    
+    @Inject(optional = true)
+    public void setDiskExpiryThreadIntervalUnit(
+            @Named("ehcache.diskExpiryThreadIntervalUnit") TimeUnit diskExpiryThreadIntervalUnit) {
+        this.diskExpiryThreadIntervalUnit = diskExpiryThreadIntervalUnit;
+    }
+    
+    @Inject(optional = true)
+    public void setDiskPersistent(@Named("ehcache.diskPersistent") boolean diskPersistent) {
+        this.diskPersistent = diskPersistent;
+    }
+    
+    @Inject(optional = true)
+    public void setDiskStorePath(@Named("ehcache.diskStorePath") String diskStorePath) {
+        this.diskStorePath = diskStorePath;
+    }
+    
+    @Inject(optional = true)
+    public void setDiskSpoolBufferSizeMB(@Named("ehcache.diskSpoolBufferSizeMB") int diskSpoolBufferSizeMB) {
+        this.diskSpoolBufferSizeMB = diskSpoolBufferSizeMB;
     }
     
     @Inject(optional = true)
     void setMaxElementsInMemory(@Named("ehcache.maxElementsInMemory") int maxElementsInMemory) {
         this.maxElementsInMemory = maxElementsInMemory;
+    }
+
+    @Inject(optional = true)
+    public void setMaxElementsOnDisk(@Named("ehcache.maxElementsOnDisk") int maxElementsOnDisk) {
+        this.maxElementsOnDisk = maxElementsOnDisk;
+    }
+
+    @Inject(optional = true)
+    void setMemoryStoreEvictionPolicy(@Named("ehcache.cacheMode") CacheMode cacheMode) {
+        this.memoryStoreEvictionPolicy = of(cacheMode);
+    }
+
+    @Inject(optional = true)
+    void setTerracottaClustered(@Named("ehcache.isTerracottaClustered") boolean terracottaClustered) {
+        this.isTerracottaClustered = terracottaClustered;
+    }
+    
+    @Inject(optional = true)
+    void setTerracottaValueMode(@Named("ehcache.terracottaValueMode") String terracottaValueMode) {
+        this.terracottaValueMode = terracottaValueMode;
+    }
+
+    @Inject(optional = true)
+    void setTerracottaCoherentReads(@Named("ehcache.terracottaCoherentReads") boolean terracottaCoherentReads) {
+        this.terracottaCoherentReads = terracottaCoherentReads;
+    }
+
+    @Inject(optional = true)
+    public void setTimeToIdle(@Named("ehcache.timeToIdle") long timeToIdle) {
+        this.timeToIdle = timeToIdle;
+    }
+
+    @Inject(optional = true)
+    public void setTimeToIdleUnit(@Named("ehcache.timeToIdleUnit") TimeUnit timeToIdleUnit) {
+        this.timeToIdleUnit = timeToIdleUnit;
     }
     
     @Inject(optional = true)
@@ -138,10 +182,16 @@ public class EhCacheService implements CacheService, Initializable, Disposable {
         this.timeToLive = timeToLive;
     }
     
+    @Inject(optional = true)
+    public void setTimeToLiveUnit(@Named("ehcache.timeToLiveUnit") TimeUnit timeToLiveUnit) {
+        this.timeToLiveUnit = timeToLiveUnit;
+    }
+    
+    
     private MemoryStoreEvictionPolicy of(CacheMode mode) {
         switch (mode) {
             case LRU: {
-                return MemoryStoreEvictionPolicy.LFU;
+                return MemoryStoreEvictionPolicy.LRU;
             }
             case LFU: {
                 return MemoryStoreEvictionPolicy.LFU;
