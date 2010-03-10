@@ -247,9 +247,43 @@ class EhCacheService implements CacheService, Initializable, Disposable {
     }
     
     @Override
+    public long getMaxAge() {
+        return cache.getCacheConfiguration().getTimeToLiveSeconds();
+    }
+    
+    @Override
+    public long getMaxAge(TimeUnit unit) {
+        return unit.convert(getMaxAge(), TimeUnit.SECONDS);
+    }
+    
+    @Override
+    public void setMaxAge(long maxAgeSeconds) {
+        Preconditions.checkArgument(maxAgeSeconds >= 0, MAX_AGE_NEGATIVE);
+        cache.getCacheConfiguration().setTimeToLiveSeconds(maxAgeSeconds);
+    }
+    
+    @Override
+    public void setMaxAge(long maxAge, TimeUnit maxAgeUnit) {
+        Preconditions.checkArgument(maxAge >= 0, MAX_AGE_NEGATIVE);
+        Preconditions.checkNotNull(maxAgeUnit, "MaxAge TimeUnit");
+        this.setMaxAge(maxAgeUnit.toSeconds(maxAge));
+    }
+    
+    @Override
     public void store(Serializable key, Object value) {
         Preconditions.checkNotNull(key, "Key");
         final Element element = new Element(key, value);
+        cache.putQuiet(element);
+    }
+    
+    @Override
+    public void store(Serializable key, Object value, long maxAge, TimeUnit maxAgeUnit) {
+        Preconditions.checkNotNull(key, "Key");
+        Preconditions.checkArgument(maxAge >= 0, MAX_AGE_NEGATIVE);
+        Preconditions.checkNotNull(maxAgeUnit, "MaxAge TimeUnit");
+
+        final int maxAgeSeconds = (int) maxAgeUnit.toSeconds(maxAge);
+        final Element element = new Element(key, value, false, null, maxAgeSeconds);
         cache.putQuiet(element);
     }
     
