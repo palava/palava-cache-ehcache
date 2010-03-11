@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package de.cosmocode.palava.services.cache;
+package de.cosmocode.palava.cache;
 
 import net.sf.ehcache.Status;
 
@@ -29,7 +29,7 @@ import net.sf.ehcache.Status;
 public class EhCacheServiceTest extends CacheServiceTest {
 
     @Override
-    public CacheService create() {
+    public CacheService unit() {
         final EhCacheService service = new EhCacheService(false, true);
         // TODO call setter
         service.initialize();

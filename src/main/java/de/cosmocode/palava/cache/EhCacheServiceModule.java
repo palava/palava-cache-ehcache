@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package de.cosmocode.palava.services.cache;
+package de.cosmocode.palava.cache;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
@@ -54,7 +54,7 @@ import com.google.inject.Module;
  * 
  * @author Oliver Lorenz
  */
-public class EhCacheModule implements Module {
+public final class EhCacheServiceModule implements Module {
     
     @Override
     public void configure(final Binder binder) {

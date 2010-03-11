@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package de.cosmocode.palava.services.cache;
+package de.cosmocode.palava.cache;
 
 import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
@@ -45,7 +45,7 @@ import de.cosmocode.palava.core.lifecycle.Initializable;
  * @author Willi Schoenborn
  * @author Oliver Lorenz
  */
-class EhCacheService implements CacheService, Initializable, Disposable {
+final class EhCacheService implements CacheService, Initializable, Disposable {
 
     private static final Logger LOG = LoggerFactory.getLogger(EhCacheService.class);
 
@@ -89,7 +89,6 @@ class EhCacheService implements CacheService, Initializable, Disposable {
     
     private Ehcache cache;
     
-    
     /**
      * Injected constructor. Sets overflowToDisk.
      * @param overflowToDisk if true, then the cache puts elements onto the disk if the memory is full
@@ -103,7 +102,6 @@ class EhCacheService implements CacheService, Initializable, Disposable {
         this.overflowToDisk = overflowToDisk;
         this.eternal = eternal;
     }
-    
     
     @Inject(optional = true)
     void setClearOnFlush(@Named("ehcache.clearOnFlush") boolean clearOnFlush) {
@@ -186,7 +184,6 @@ class EhCacheService implements CacheService, Initializable, Disposable {
     void setTimeToLiveUnit(@Named("ehcache.timeToLiveUnit") TimeUnit timeToLiveUnit) {
         this.timeToLiveUnit = timeToLiveUnit;
     }
-    
     
     private MemoryStoreEvictionPolicy of(CacheMode mode) {
         switch (mode) {
@@ -323,4 +320,3 @@ class EhCacheService implements CacheService, Initializable, Disposable {
     }
     
 }
-
