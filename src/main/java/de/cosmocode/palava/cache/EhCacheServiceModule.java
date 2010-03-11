@@ -21,6 +21,7 @@ package de.cosmocode.palava.cache;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import com.google.inject.Singleton;
 
 /**
  * <p> Binds the EhCacheService to the {@link CacheService}.
@@ -58,7 +59,7 @@ public final class EhCacheServiceModule implements Module {
     
     @Override
     public void configure(final Binder binder) {
-        binder.bind(CacheService.class).to(EhCacheService.class);
+        binder.bind(CacheService.class).to(EhCacheService.class).in(Singleton.class);
     }
 
 }
