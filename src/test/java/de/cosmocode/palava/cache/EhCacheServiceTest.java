@@ -22,16 +22,16 @@ package de.cosmocode.palava.cache;
 import net.sf.ehcache.Status;
 
 /**
- * TODO handle NPEs
+ * Tests the {@link EhCacheService}.
  *
  * @author Markus Baumann
+ * @author Oliver Lorenz
  */
 public class EhCacheServiceTest extends CacheServiceTest {
 
     @Override
     public CacheService unit() {
         final EhCacheService service = new EhCacheService(false, true);
-        // TODO call setter
         service.initialize();
         
         if (service.getCache().getStatus().equals(Status.STATUS_UNINITIALISED)) {
