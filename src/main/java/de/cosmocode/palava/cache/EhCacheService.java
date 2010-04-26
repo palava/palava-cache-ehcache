@@ -38,14 +38,18 @@ import de.cosmocode.palava.core.lifecycle.Initializable;
 /**
  * An implementation of the {@link CacheService} interface
  * which uses <a href="http://ehcache.org/">Ehcache</a>.
- *
+ * 
  * @author Willi Schoenborn
  * @author Oliver Lorenz
  */
 final class EhCacheService implements CacheService, Initializable, Disposable {
 
     private static final Logger LOG = LoggerFactory.getLogger(EhCacheService.class);
+    
+    private static final String MAX_AGE_NEGATIVE = "Max age must not be negative, but was %s";
 
+    private String name = getClass().getName();
+    
     private int maxElementsInMemory = 10000;
 
     private MemoryStoreEvictionPolicy memoryStoreEvictionPolicy = MemoryStoreEvictionPolicy.LRU;
@@ -82,7 +86,7 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
 
     private boolean terracottaCoherentReads = true;
 
-    private CacheManager manager;
+    private final CacheManager manager;
     
     private Ehcache cache;
     
@@ -92,12 +96,17 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
      * @param eternal if true, the cached elements never expire
      */
     @Inject
-    EhCacheService(
-        @Named("ehcache.overflowToDisk") final boolean overflowToDisk,
+    EhCacheService(@Named("ehcache.overflowToDisk") final boolean overflowToDisk,
         @Named("ehcache.eternal") final boolean eternal) {
-        
         this.overflowToDisk = overflowToDisk;
         this.eternal = eternal;
+        
+        manager = CacheManager.create();
+    }
+    
+    @Inject(optional = true)
+    void setName(@Named("ehcache.name") String name) {
+        this.name = Preconditions.checkNotNull(name, "Name");
     }
     
     @Inject(optional = true)
@@ -113,7 +122,7 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
     
     @Inject(optional = true)
     void setDiskExpiryThreadIntervalUnit(
-            @Named("ehcache.diskExpiryThreadIntervalUnit") TimeUnit diskExpiryThreadIntervalUnit) {
+        @Named("ehcache.diskExpiryThreadIntervalUnit") TimeUnit diskExpiryThreadIntervalUnit) {
         this.diskExpiryThreadIntervalUnit = diskExpiryThreadIntervalUnit;
     }
     
@@ -212,8 +221,6 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
                 terracottaValueMode, timeToIdle, timeToIdleUnit, timeToLive, timeToLiveUnit
             }
         );
-        manager = CacheManager.create();
-        final String name = getClass().getName();
         cache = new Cache(
                 name,
                 maxElementsInMemory,
@@ -252,13 +259,13 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
     
     @Override
     public void setMaxAge(long maxAgeSeconds) {
-        Preconditions.checkArgument(maxAgeSeconds >= 0, MAX_AGE_NEGATIVE);
+        Preconditions.checkArgument(maxAgeSeconds >= 0, MAX_AGE_NEGATIVE, maxAgeSeconds);
         cache.getCacheConfiguration().setTimeToLiveSeconds(maxAgeSeconds);
     }
     
     @Override
     public void setMaxAge(long maxAge, TimeUnit maxAgeUnit) {
-        Preconditions.checkArgument(maxAge >= 0, MAX_AGE_NEGATIVE);
+        Preconditions.checkArgument(maxAge >= 0, MAX_AGE_NEGATIVE, maxAge);
         Preconditions.checkNotNull(maxAgeUnit, "MaxAge TimeUnit");
         this.setMaxAge(maxAgeUnit.toSeconds(maxAge));
     }
@@ -273,7 +280,7 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
     @Override
     public void store(Serializable key, Object value, long maxAge, TimeUnit maxAgeUnit) {
         Preconditions.checkNotNull(key, "Key");
-        Preconditions.checkArgument(maxAge >= 0, MAX_AGE_NEGATIVE);
+        Preconditions.checkArgument(maxAge >= 0, MAX_AGE_NEGATIVE, maxAge);
         Preconditions.checkNotNull(maxAgeUnit, "MaxAge TimeUnit");
 
         final int maxAgeSeconds = (int) maxAgeUnit.toSeconds(maxAge);
