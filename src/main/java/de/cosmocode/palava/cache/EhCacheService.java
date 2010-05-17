@@ -267,6 +267,7 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
     public void setMaxAge(long maxAgeSeconds) {
         Preconditions.checkArgument(maxAgeSeconds >= 0, MAX_AGE_NEGATIVE, maxAgeSeconds);
         cache.getCacheConfiguration().setTimeToLiveSeconds(maxAgeSeconds);
+        cache.getCacheConfiguration().setEternal(false);
     }
     
     @Override
@@ -299,7 +300,7 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
     public <T> T read(Serializable key) {
         Preconditions.checkNotNull(key, "Key");
         final Element element = cache.get(key);
-        return element == null ? null : (T) element.getValue();
+        return element == null ? null : (T) element.getObjectValue();
     }
     
     @Override
