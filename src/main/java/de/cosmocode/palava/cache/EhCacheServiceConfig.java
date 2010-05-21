@@ -64,7 +64,6 @@ final class EhCacheServiceConfig {
     
     public static final String TIME_TO_LIVE_UNIT = PREFIX + "timeToLiveUnit";
     
-    
     private EhCacheServiceConfig() {
         
     }
