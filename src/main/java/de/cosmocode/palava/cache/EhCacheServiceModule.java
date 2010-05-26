@@ -36,6 +36,10 @@ import de.cosmocode.palava.core.inject.RebindModule;
  * <p> Look at the constructor ({@link #EhCacheServiceModule()})
  * for all configuration parameters.
  * </p>
+ * <p> If you want to use several CacheServices you can use binding annotations with 
+ * the static method {@link #annotatedWith(Class, String)}
+ * and annotate each and every use of CacheService with these annotations.
+ * </p>
  * 
  * @author Oliver Lorenz
  */
@@ -46,27 +50,27 @@ public final class EhCacheServiceModule implements Module {
      * 
      * <p>The following parameters must be set for the EhCacheService.</p>
      * <ul>
-     *   <li>ehcache.overflowToDisk (boolean, if true, cache data flows from memory to disk)</li>
-     *   <li>ehcache.eternal (boolean, if true then cached data live eternal)</li>
+     *   <li>cache.ehcache.overflowToDisk (boolean, if true, cache data flows from memory to disk)</li>
+     *   <li>cache.ehcache.eternal (boolean, if true then cached data live eternal)</li>
      * </ul>
      * <p>Optional parameters are:</p>
      * <ul>
-     *   <li>ehcache.clearOnFlush (boolean)</li>
-     *   <li>ehcache.diskExpiryThreadInterval (long)</li>
-     *   <li>ehcache.diskExpiryThreadIntervalUnit (TimeUnit)</li>
-     *   <li>ehcache.diskPersistent (boolean)</li>
-     *   <li>ehcache.diskStorePath (file path)</li>
-     *   <li>ehcache.diskSpoolBufferSizeMB (int)</li>
-     *   <li>ehcache.maxElementsInMemory (int)</li>
-     *   <li>ehcache.maxElementsOnDisk (int)</li>
-     *   <li>ehcache.cacheMode (one of LRU, LFU, FIFO)</li>
-     *   <li>ehcache.isTerracottaClustered (boolean)</li>
-     *   <li>ehcache.terracottaValueMode (one of SERIALIZATION, IDENTITY)</li>
-     *   <li>ehcache.terracottaCoherentReads (boolean)</li>
-     *   <li>ehcache.timeToIdle (long)</li>
-     *   <li>ehcache.timeToIdleUnit (TimeUnit)</li>
-     *   <li>ehcache.timeToLive (long)</li>
-     *   <li>ehcache.timeToLiveUnit (TimeUnit)</li>
+     *   <li>cache.ehcache.clearOnFlush (boolean)</li>
+     *   <li>cache.ehcache.diskExpiryThreadInterval (long)</li>
+     *   <li>cache.ehcache.diskExpiryThreadIntervalUnit (TimeUnit)</li>
+     *   <li>cache.ehcache.diskPersistent (boolean)</li>
+     *   <li>cache.ehcache.diskStorePath (file path)</li>
+     *   <li>cache.ehcache.diskSpoolBufferSizeMB (int)</li>
+     *   <li>cache.ehcache.maxElementsInMemory (int)</li>
+     *   <li>cache.ehcache.maxElementsOnDisk (int)</li>
+     *   <li>cache.ehcache.cacheMode (one of LRU, LFU, FIFO)</li>
+     *   <li>cache.ehcache.isTerracottaClustered (boolean)</li>
+     *   <li>cache.ehcache.terracottaValueMode (one of SERIALIZATION, IDENTITY)</li>
+     *   <li>cache.ehcache.terracottaCoherentReads (boolean)</li>
+     *   <li>cache.ehcache.timeToIdle (long)</li>
+     *   <li>cache.ehcache.timeToIdleUnit (TimeUnit)</li>
+     *   <li>cache.ehcache.timeToLive (long)</li>
+     *   <li>cache.ehcache.timeToLiveUnit (TimeUnit)</li>
      * </ul>
      */
     public EhCacheServiceModule() {
