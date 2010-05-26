@@ -48,7 +48,7 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
     
     private static final String MAX_AGE_NEGATIVE = "Max age must not be negative, but was %s";
 
-    private String name = getClass().getName();
+    private String name = "ehcache";
     
     private int maxElementsInMemory = 10000;
 
@@ -86,7 +86,7 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
 
     private boolean terracottaCoherentReads = true;
 
-    private final CacheManager manager;
+    private final CacheManager manager = CacheManager.create();
     
     private Ehcache cache;
     
@@ -96,13 +96,11 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
      * @param eternal if true, the cached elements never expire
      */
     @Inject
-    EhCacheService(
+    public EhCacheService(
         @Named(EhCacheServiceConfig.OVERFLOW_TO_DISK) final boolean overflowToDisk,
         @Named(EhCacheServiceConfig.ETERNAL) final boolean eternal) {
         this.overflowToDisk = overflowToDisk;
         this.eternal = eternal;
-        
-        manager = CacheManager.create();
     }
     
     @Inject(optional = true)
@@ -138,14 +136,12 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
     }
     
     @Inject(optional = true)
-    void setDiskSpoolBufferSizeMB(
-        @Named(EhCacheServiceConfig.DISK_SPOOL_BUFFER_SIZE_MB) int diskSpoolBufferSizeMB) {
+    void setDiskSpoolBufferSizeMB(@Named(EhCacheServiceConfig.DISK_SPOOL_BUFFER_SIZE_MB) int diskSpoolBufferSizeMB) {
         this.diskSpoolBufferSizeMB = diskSpoolBufferSizeMB;
     }
     
     @Inject(optional = true)
-    void setMaxElementsInMemory(
-        @Named(EhCacheServiceConfig.MAX_ELEMENTS_IN_MEMORY) int maxElementsInMemory) {
+    void setMaxElementsInMemory(@Named(EhCacheServiceConfig.MAX_ELEMENTS_IN_MEMORY) int maxElementsInMemory) {
         this.maxElementsInMemory = maxElementsInMemory;
     }
 
@@ -160,14 +156,12 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
     }
 
     @Inject(optional = true)
-    void setTerracottaClustered(
-        @Named(EhCacheServiceConfig.IS_TERRACOTTA_CLUSTERED) boolean terracottaClustered) {
+    void setTerracottaClustered(@Named(EhCacheServiceConfig.IS_TERRACOTTA_CLUSTERED) boolean terracottaClustered) {
         this.isTerracottaClustered = terracottaClustered;
     }
     
     @Inject(optional = true)
-    void setTerracottaValueMode(
-        @Named(EhCacheServiceConfig.TERRACOTTA_VALUE_MODE) String terracottaValueMode) {
+    void setTerracottaValueMode(@Named(EhCacheServiceConfig.TERRACOTTA_VALUE_MODE) String terracottaValueMode) {
         this.terracottaValueMode = terracottaValueMode;
     }
 
@@ -228,28 +222,30 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
             }
         );
         cache = new Cache(
-                name,
-                maxElementsInMemory,
-                memoryStoreEvictionPolicy,
-                overflowToDisk,
-                diskStorePath,
-                eternal, 
-                timeToLiveUnit.toSeconds(timeToLive),
-                timeToIdleUnit.toSeconds(timeToIdle),
-                diskPersistent,
-                diskExpiryThreadIntervalUnit.toSeconds(diskExpiryThreadInterval),
-                null,
-                null, 
-                maxElementsOnDisk,
-                diskSpoolBufferSizeMB,
-                clearOnFlush,
-                isTerracottaClustered,
-                terracottaValueMode,
-                terracottaCoherentReads
+            name,
+            maxElementsInMemory,
+            memoryStoreEvictionPolicy,
+            overflowToDisk,
+            diskStorePath,
+            eternal, 
+            timeToLiveUnit.toSeconds(timeToLive),
+            timeToIdleUnit.toSeconds(timeToIdle),
+            diskPersistent,
+            diskExpiryThreadIntervalUnit.toSeconds(diskExpiryThreadInterval),
+            null,
+            null, 
+            maxElementsOnDisk,
+            diskSpoolBufferSizeMB,
+            clearOnFlush,
+            isTerracottaClustered,
+            terracottaValueMode,
+            terracottaCoherentReads
         );
+        
         if (manager.cacheExists(name)) {
             manager.removeCache(name);
         }
+        
         manager.addCache(cache);
     }
     
@@ -323,11 +319,7 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
     
     @Override
     public String toString() {
-        if (cache == null) {
-            return "EhCacheService, not initialized";
-        } else {
-            return cache.toString();
-        }
+        return String.format("%s [%s]", EhCacheService.class.getSimpleName(), name);
     }
     
     Ehcache getCache() {
