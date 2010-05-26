@@ -18,7 +18,6 @@ package de.cosmocode.palava.cache;
 
 /**
  * Config class for EhCache.
- * TODO: make configurable for "ehcache.(name).*"
  *
  * @author Oliver Lorenz
  */
