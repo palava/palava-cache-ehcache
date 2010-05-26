@@ -26,7 +26,7 @@ import com.google.inject.Module;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
-import de.cosmocode.palava.core.inject.AbstractRebindingModule;
+import de.cosmocode.palava.core.inject.AbstractRebindModule;
 import de.cosmocode.palava.core.inject.Config;
 import de.cosmocode.palava.core.inject.RebindModule;
 
@@ -98,7 +98,7 @@ public final class EhCacheServiceModule implements Module {
      * @since 2.0
      * @author Willi Schoenborn
      */
-    private static final class AnnotatedModule extends AbstractRebindingModule {
+    private static final class AnnotatedModule extends AbstractRebindModule {
         
         private final Class<? extends Annotation> annotation;
         private final String name;
