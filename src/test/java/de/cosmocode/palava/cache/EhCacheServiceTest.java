@@ -28,7 +28,7 @@ public class EhCacheServiceTest extends CacheServiceTest {
 
     @Override
     public CacheService unit() {
-        final EhCacheService service = new EhCacheService(false, true);
+        final EhCacheService service = new EhCacheService();
         service.initialize();
         
         if (service.getCache().getStatus().equals(Status.STATUS_UNINITIALISED)) {

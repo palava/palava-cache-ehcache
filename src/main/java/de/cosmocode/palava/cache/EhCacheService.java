@@ -50,31 +50,35 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
 
     private String name = "ehcache";
     
-    private int maxElementsInMemory = 10000;
+    /*
+     * Start configuration parameters.
+     */
 
+    private boolean eternal;
+
+    private boolean overflowToDisk;
+    
     private MemoryStoreEvictionPolicy memoryStoreEvictionPolicy = MemoryStoreEvictionPolicy.LRU;
-
-    private final boolean overflowToDisk;
-
-    private String diskStorePath;
-
-    private final boolean eternal;
-
+    
+    private int maxElementsInMemory = 10000;
+    
     private long timeToLive = 600L;
-
+    
     private TimeUnit timeToLiveUnit = TimeUnit.SECONDS;
 
     private long timeToIdle = 600L;
-
+    
     private TimeUnit timeToIdleUnit = TimeUnit.SECONDS;
-
+    
     private boolean diskPersistent;
 
-    private long diskExpiryThreadInterval;
-
-    private TimeUnit diskExpiryThreadIntervalUnit = TimeUnit.SECONDS;
-
+    private String diskStorePath;
+    
     private int maxElementsOnDisk;
+
+    private long diskExpiryThreadInterval;
+    
+    private TimeUnit diskExpiryThreadIntervalUnit = TimeUnit.SECONDS;
 
     private int diskSpoolBufferSizeMB;
 
@@ -86,45 +90,59 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
 
     private boolean terracottaCoherentReads = true;
 
+    /*
+     * End configuration parameters. 
+     */
+    
     private final CacheManager manager = CacheManager.create();
     
     private Ehcache cache;
-    
-    /**
-     * Injected constructor. Sets overflowToDisk.
-     * @param overflowToDisk if true, then the cache puts elements onto the disk if the memory is full
-     * @param eternal if true, the cached elements never expire
-     */
-    @Inject
-    public EhCacheService(
-        @Named(EhCacheServiceConfig.OVERFLOW_TO_DISK) final boolean overflowToDisk,
-        @Named(EhCacheServiceConfig.ETERNAL) final boolean eternal) {
-        this.overflowToDisk = overflowToDisk;
-        this.eternal = eternal;
-    }
     
     @Inject(optional = true)
     void setName(@Named(EhCacheServiceConfig.NAME) String name) {
         this.name = Preconditions.checkNotNull(name, "Name");
     }
+
+    @Inject(optional = true)
+    void setEternal(@Named(EhCacheServiceConfig.ETERNAL) boolean eternal) {
+        this.eternal = eternal;
+    }
     
     @Inject(optional = true)
-    void setClearOnFlush(@Named(EhCacheServiceConfig.CLEAR_ON_FLUSH) boolean clearOnFlush) {
-        this.clearOnFlush = clearOnFlush;
+    void setOverflowToDisk(@Named(EhCacheServiceConfig.OVERFLOW_TO_DISK) boolean overflowToDisk) {
+        this.overflowToDisk = overflowToDisk;
+    }
+    
+    @Inject(optional = true)
+    void setMemoryStoreEvictionPolicy(@Named(EhCacheServiceConfig.CACHE_MODE) CacheMode cacheMode) {
+        this.memoryStoreEvictionPolicy = of(cacheMode);
     }
 
     @Inject(optional = true)
-    void setDiskExpiryThreadInterval(
-        @Named(EhCacheServiceConfig.DISK_EXPIRY_THREAD_INTERVAL) long diskExpiryThreadInterval) {
-        this.diskExpiryThreadInterval = diskExpiryThreadInterval;
+    void setMaxElementsInMemory(@Named(EhCacheServiceConfig.MAX_ELEMENTS_IN_MEMORY) int maxElementsInMemory) {
+        this.maxElementsInMemory = maxElementsInMemory;
     }
-    
+
     @Inject(optional = true)
-    void setDiskExpiryThreadIntervalUnit(
-        @Named(EhCacheServiceConfig.DISK_EXPIRY_THREAD_INTERVAL_UNIT) TimeUnit diskExpiryThreadIntervalUnit) {
-        this.diskExpiryThreadIntervalUnit = diskExpiryThreadIntervalUnit;
+    void setTimeToLive(@Named(EhCacheServiceConfig.TIME_TO_LIVE) long timeToLive) {
+        this.timeToLive = timeToLive;
     }
-    
+
+    @Inject(optional = true)
+    void setTimeToLiveUnit(@Named(EhCacheServiceConfig.TIME_TO_LIVE_UNIT) TimeUnit timeToLiveUnit) {
+        this.timeToLiveUnit = timeToLiveUnit;
+    }
+
+    @Inject(optional = true)
+    void setTimeToIdle(@Named(EhCacheServiceConfig.TIME_TO_IDLE) long timeToIdle) {
+        this.timeToIdle = timeToIdle;
+    }
+
+    @Inject(optional = true)
+    void setTimeToIdleUnit(@Named(EhCacheServiceConfig.TIME_TO_IDLE_UNIT) TimeUnit timeToIdleUnit) {
+        this.timeToIdleUnit = timeToIdleUnit;
+    }
+
     @Inject(optional = true)
     void setDiskPersistent(@Named(EhCacheServiceConfig.DISK_PERSISTENT) boolean diskPersistent) {
         this.diskPersistent = diskPersistent;
@@ -136,23 +154,30 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
     }
     
     @Inject(optional = true)
-    void setDiskSpoolBufferSizeMB(@Named(EhCacheServiceConfig.DISK_SPOOL_BUFFER_SIZE_MB) int diskSpoolBufferSizeMB) {
-        this.diskSpoolBufferSizeMB = diskSpoolBufferSizeMB;
-    }
-    
-    @Inject(optional = true)
-    void setMaxElementsInMemory(@Named(EhCacheServiceConfig.MAX_ELEMENTS_IN_MEMORY) int maxElementsInMemory) {
-        this.maxElementsInMemory = maxElementsInMemory;
-    }
-
-    @Inject(optional = true)
     void setMaxElementsOnDisk(@Named(EhCacheServiceConfig.MAX_ELEMENTS_ON_DISK) int maxElementsOnDisk) {
         this.maxElementsOnDisk = maxElementsOnDisk;
     }
 
     @Inject(optional = true)
-    void setMemoryStoreEvictionPolicy(@Named(EhCacheServiceConfig.CACHE_MODE) CacheMode cacheMode) {
-        this.memoryStoreEvictionPolicy = of(cacheMode);
+    void setDiskExpiryThreadInterval(
+        @Named(EhCacheServiceConfig.DISK_EXPIRY_THREAD_INTERVAL) long diskExpiryThreadInterval) {
+        this.diskExpiryThreadInterval = diskExpiryThreadInterval;
+    }
+
+    @Inject(optional = true)
+    void setDiskExpiryThreadIntervalUnit(
+        @Named(EhCacheServiceConfig.DISK_EXPIRY_THREAD_INTERVAL_UNIT) TimeUnit diskExpiryThreadIntervalUnit) {
+        this.diskExpiryThreadIntervalUnit = diskExpiryThreadIntervalUnit;
+    }
+
+    @Inject(optional = true)
+    void setDiskSpoolBufferSizeMB(@Named(EhCacheServiceConfig.DISK_SPOOL_BUFFER_SIZE_MB) int diskSpoolBufferSizeMB) {
+        this.diskSpoolBufferSizeMB = diskSpoolBufferSizeMB;
+    }
+    
+    @Inject(optional = true)
+    void setClearOnFlush(@Named(EhCacheServiceConfig.CLEAR_ON_FLUSH) boolean clearOnFlush) {
+        this.clearOnFlush = clearOnFlush;
     }
 
     @Inject(optional = true)
@@ -171,26 +196,6 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
         this.terracottaCoherentReads = terracottaCoherentReads;
     }
 
-    @Inject(optional = true)
-    void setTimeToIdle(@Named(EhCacheServiceConfig.TIME_TO_IDLE) long timeToIdle) {
-        this.timeToIdle = timeToIdle;
-    }
-
-    @Inject(optional = true)
-    void setTimeToIdleUnit(@Named(EhCacheServiceConfig.TIME_TO_IDLE_UNIT) TimeUnit timeToIdleUnit) {
-        this.timeToIdleUnit = timeToIdleUnit;
-    }
-    
-    @Inject(optional = true)
-    void setTimeToLive(@Named(EhCacheServiceConfig.TIME_TO_LIVE) long timeToLive) {
-        this.timeToLive = timeToLive;
-    }
-    
-    @Inject(optional = true)
-    void setTimeToLiveUnit(@Named(EhCacheServiceConfig.TIME_TO_LIVE_UNIT) TimeUnit timeToLiveUnit) {
-        this.timeToLiveUnit = timeToLiveUnit;
-    }
-    
     private MemoryStoreEvictionPolicy of(CacheMode mode) {
         switch (mode) {
             case LRU: {
