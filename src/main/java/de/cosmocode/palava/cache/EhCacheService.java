@@ -255,30 +255,6 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
     }
     
     @Override
-    public long getMaxAge() {
-        return cache.getCacheConfiguration().getTimeToLiveSeconds();
-    }
-    
-    @Override
-    public long getMaxAge(TimeUnit unit) {
-        return unit.convert(getMaxAge(), TimeUnit.SECONDS);
-    }
-    
-    @Override
-    public void setMaxAge(long maxAgeSeconds) {
-        Preconditions.checkArgument(maxAgeSeconds >= 0, MAX_AGE_NEGATIVE, maxAgeSeconds);
-        cache.getCacheConfiguration().setTimeToLiveSeconds(maxAgeSeconds);
-        cache.getCacheConfiguration().setEternal(false);
-    }
-    
-    @Override
-    public void setMaxAge(long maxAge, TimeUnit maxAgeUnit) {
-        Preconditions.checkArgument(maxAge >= 0, MAX_AGE_NEGATIVE, maxAge);
-        Preconditions.checkNotNull(maxAgeUnit, "MaxAge TimeUnit");
-        this.setMaxAge(maxAgeUnit.toSeconds(maxAge));
-    }
-    
-    @Override
     public void store(Serializable key, Object value) {
         Preconditions.checkNotNull(key, "Key");
         final Element element = new Element(key, value);
@@ -295,7 +271,19 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
         final Element element = new Element(key, value, false, null, maxAgeSeconds);
         cache.putQuiet(element);
     }
-    
+
+    @Override
+    public void store(Serializable key, Object value, CacheExpiration expiration) {
+        Preconditions.checkNotNull(key, "Key");
+        Preconditions.checkNotNull(expiration, "Expiration");
+
+        final Element element = new Element(key, value);
+        element.setEternal(expiration.isEternal());
+        element.setTimeToIdle((int) expiration.getIdleTimeIn(TimeUnit.SECONDS));
+        element.setTimeToLive((int) expiration.getLifeTimeIn(TimeUnit.SECONDS));
+        cache.putQuiet(element);
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public <T> T read(Serializable key) {

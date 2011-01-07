@@ -18,6 +18,8 @@ package de.cosmocode.palava.cache;
 
 import net.sf.ehcache.Status;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Tests the {@link EhCacheService}.
  *
@@ -27,8 +29,37 @@ import net.sf.ehcache.Status;
 public class EhCacheServiceTest extends CacheServiceTest {
 
     @Override
+    protected long lifeTime() {
+        return 2;
+    }
+
+    @Override
+    protected long idleTime() {
+        return 2;
+    }
+
+    @Override
+    protected long sleepBeforeIdleTime() {
+        return 1;
+    }
+
+    @Override
+    protected long sleepTimeExpires() {
+        return 3;
+    }
+
+    @Override
+    protected TimeUnit timeUnit() {
+        return TimeUnit.SECONDS;
+    }
+
+    @Override
     public CacheService unit() {
         final EhCacheService service = new EhCacheService();
+        service.setTimeToIdle(1);
+        service.setTimeToIdleUnit(TimeUnit.SECONDS);
+        service.setTimeToLive(1);
+        service.setTimeToLiveUnit(TimeUnit.SECONDS);
         service.initialize();
         
         if (service.getCache().getStatus().equals(Status.STATUS_UNINITIALISED)) {

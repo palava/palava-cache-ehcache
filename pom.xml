@@ -33,12 +33,12 @@
     <dependency>
       <groupId>de.cosmocode.palava</groupId>
       <artifactId>palava-cache</artifactId>
-      <version>[2.1,3)</version>
+      <version>[3.0-SNAPSHOT,4)</version>
     </dependency>
     <dependency>
       <groupId>de.cosmocode.palava</groupId>
       <artifactId>palava-cache</artifactId>
-      <version>[2.1,3)</version>
+      <version>[3.0-SNAPSHOT,4)</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
