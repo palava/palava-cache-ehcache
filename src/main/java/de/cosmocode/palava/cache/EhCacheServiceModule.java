@@ -29,7 +29,6 @@ import com.google.inject.name.Names;
 import de.cosmocode.palava.core.inject.AbstractRebindModule;
 import de.cosmocode.palava.core.inject.Config;
 import de.cosmocode.palava.core.inject.RebindModule;
-import net.sf.ehcache.config.CacheConfiguration;
 
 /**
  * <p> Binds the EhCacheService to the {@link CacheService}.

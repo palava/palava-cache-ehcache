@@ -16,10 +16,11 @@
 
 package de.cosmocode.palava.cache;
 
-import net.sf.ehcache.Status;
-import org.junit.Test;
-
 import java.util.concurrent.TimeUnit;
+
+import net.sf.ehcache.Status;
+
+import org.junit.Test;
 
 /**
  * Tests the {@link EhCacheService}.
