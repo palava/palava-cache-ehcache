@@ -23,6 +23,8 @@ import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
+import net.sf.ehcache.config.CacheConfiguration;
+import net.sf.ehcache.config.TerracottaConfiguration;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 import org.slf4j.Logger;
@@ -53,14 +55,6 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
     /*
      * Start configuration parameters.
      */
-
-    private boolean eternal;
-
-    private boolean overflowToDisk;
-    
-    private MemoryStoreEvictionPolicy memoryStoreEvictionPolicy = MemoryStoreEvictionPolicy.LRU;
-    
-    private int maxElementsInMemory = 10000;
     
     private long timeToLive = 600L;
     
@@ -69,26 +63,10 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
     private long timeToIdle = 600L;
     
     private TimeUnit timeToIdleUnit = TimeUnit.SECONDS;
-    
-    private boolean diskPersistent;
-
-    private String diskStorePath;
-    
-    private int maxElementsOnDisk;
 
     private long diskExpiryThreadInterval;
     
     private TimeUnit diskExpiryThreadIntervalUnit = TimeUnit.SECONDS;
-
-    private int diskSpoolBufferSizeMB;
-
-    private boolean clearOnFlush = true;
-
-    private boolean isTerracottaClustered;
-
-    private String terracottaValueMode;
-
-    private boolean terracottaCoherentReads = true;
 
     /*
      * End configuration parameters. 
@@ -97,30 +75,15 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
     private final CacheManager manager = CacheManager.create();
     
     private Ehcache cache;
-    
-    @Inject(optional = true)
-    void setName(@Named(EhCacheServiceConfig.NAME) String name) {
-        this.name = Preconditions.checkNotNull(name, "Name");
-    }
 
-    @Inject(optional = true)
-    void setEternal(@Named(EhCacheServiceConfig.ETERNAL) boolean eternal) {
-        this.eternal = eternal;
-    }
-    
-    @Inject(optional = true)
-    void setOverflowToDisk(@Named(EhCacheServiceConfig.OVERFLOW_TO_DISK) boolean overflowToDisk) {
-        this.overflowToDisk = overflowToDisk;
-    }
-    
-    @Inject(optional = true)
-    void setMemoryStoreEvictionPolicy(@Named(EhCacheServiceConfig.CACHE_MODE) CacheMode cacheMode) {
-        this.memoryStoreEvictionPolicy = of(cacheMode);
-    }
+    private CacheConfiguration config;
 
-    @Inject(optional = true)
-    void setMaxElementsInMemory(@Named(EhCacheServiceConfig.MAX_ELEMENTS_IN_MEMORY) int maxElementsInMemory) {
-        this.maxElementsInMemory = maxElementsInMemory;
+    @Inject
+    EhCacheService(
+            @Named(EhCacheServiceConfig.NAME) String name,
+            @Named(EhCacheServiceConfig.MAX_ELEMENTS_IN_MEMORY) int maxElementsInMemory) {
+        this.config = new CacheConfiguration(name, maxElementsInMemory);
+        this.name = name;
     }
 
     @Inject(optional = true)
@@ -144,21 +107,6 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
     }
 
     @Inject(optional = true)
-    void setDiskPersistent(@Named(EhCacheServiceConfig.DISK_PERSISTENT) boolean diskPersistent) {
-        this.diskPersistent = diskPersistent;
-    }
-    
-    @Inject(optional = true)
-    void setDiskStorePath(@Named(EhCacheServiceConfig.DISK_STORE_PATH) String diskStorePath) {
-        this.diskStorePath = diskStorePath;
-    }
-    
-    @Inject(optional = true)
-    void setMaxElementsOnDisk(@Named(EhCacheServiceConfig.MAX_ELEMENTS_ON_DISK) int maxElementsOnDisk) {
-        this.maxElementsOnDisk = maxElementsOnDisk;
-    }
-
-    @Inject(optional = true)
     void setDiskExpiryThreadInterval(
         @Named(EhCacheServiceConfig.DISK_EXPIRY_THREAD_INTERVAL) long diskExpiryThreadInterval) {
         this.diskExpiryThreadInterval = diskExpiryThreadInterval;
@@ -170,30 +118,116 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
         this.diskExpiryThreadIntervalUnit = diskExpiryThreadIntervalUnit;
     }
 
+    /**
+     * Sets eternal to the given value.
+     * @param eternal the new eternal value
+     */
+    @Inject(optional = true)
+    void setEternal(@Named(EhCacheServiceConfig.ETERNAL) boolean eternal) {
+        config.setEternal(eternal);
+    }
+
+    /**
+     * Sets overflow to disk.
+     * @param overflowToDisk whether or not to overflow to disk
+     */
+    @Inject(optional = true)
+    void setOverflowToDisk(@Named(EhCacheServiceConfig.OVERFLOW_TO_DISK) boolean overflowToDisk) {
+        config.setOverflowToDisk(overflowToDisk);
+    }
+
+    /**
+     * The eviction policy that applies when elements have to be evicted from the cache.
+     * @param cacheMode the new cache mode (or eviction policy for EhCache)
+     */
+    @Inject(optional = true)
+    void setMemoryStoreEvictionPolicy(@Named(EhCacheServiceConfig.CACHE_MODE) CacheMode cacheMode) {
+        config.setMemoryStoreEvictionPolicyFromObject(of(cacheMode));
+    }
+
+    /**
+     * Sets whether the disk store persists between CacheManager instances.
+     * Note that this operates independently of overflowToDisk.
+     * @param diskPersistent new value for disk persistent
+     */
+    @Inject(optional = true)
+    void setDiskPersistent(@Named(EhCacheServiceConfig.DISK_PERSISTENT) boolean diskPersistent) {
+        config.setDiskPersistent(diskPersistent);
+    }
+
+    /**
+     * Sets the path that will be used for the disk store.
+     * @param diskStorePath the path for the disk store (if used)
+     */
+    @Inject(optional = true)
+    void setDiskStorePath(@Named(EhCacheServiceConfig.DISK_STORE_PATH) String diskStorePath) {
+        config.setDiskStorePath(diskStorePath);
+    }
+
+    /**
+     * Sets the maximum number elements on Disk. 0 means unlimited.
+     * @param maxElementsOnDisk maximum number of elements on disk
+     */
+    @Inject(optional = true)
+    void setMaxElementsOnDisk(@Named(EhCacheServiceConfig.MAX_ELEMENTS_ON_DISK) int maxElementsOnDisk) {
+        config.setMaxElementsOnDisk(maxElementsOnDisk);
+    }
+
+    /**
+     * Sets the disk spool size, which is used to buffer writes to the DiskStore.
+     * @param diskSpoolBufferSizeMB buffer size in MB, positive number
+     */
     @Inject(optional = true)
     void setDiskSpoolBufferSizeMB(@Named(EhCacheServiceConfig.DISK_SPOOL_BUFFER_SIZE_MB) int diskSpoolBufferSizeMB) {
-        this.diskSpoolBufferSizeMB = diskSpoolBufferSizeMB;
+        config.setDiskSpoolBufferSizeMB(diskSpoolBufferSizeMB);
     }
-    
+
+    /**
+     * Sets whether the MemoryStore should be cleared when flush() is called on the cache - true by default.
+     * @param clearOnFlush true to clear on flush
+     */
     @Inject(optional = true)
     void setClearOnFlush(@Named(EhCacheServiceConfig.CLEAR_ON_FLUSH) boolean clearOnFlush) {
-        this.clearOnFlush = clearOnFlush;
+        config.setClearOnFlush(clearOnFlush);
     }
 
+    /**
+     * Indicates whether to cluster this cache with Terracotta.
+     * If terracotta is used this defaults to true.
+     * @param terracottaClustered true to cluster with terracotta, false otherwise
+     */
     @Inject(optional = true)
     void setTerracottaClustered(@Named(EhCacheServiceConfig.IS_TERRACOTTA_CLUSTERED) boolean terracottaClustered) {
-        this.isTerracottaClustered = terracottaClustered;
-    }
-    
-    @Inject(optional = true)
-    void setTerracottaValueMode(@Named(EhCacheServiceConfig.TERRACOTTA_VALUE_MODE) String terracottaValueMode) {
-        this.terracottaValueMode = terracottaValueMode;
+        if (config.getTerracottaConfiguration() == null) {
+            config.addTerracotta(new TerracottaConfiguration());
+        }
+        config.getTerracottaConfiguration().setClustered(terracottaClustered);
     }
 
+    /**
+     * Represents whether values are stored with serialization in the clustered store
+     * or through Terracotta clustered identity.
+     * @param terracottaValueMode the value mode, as in {@link net.sf.ehcache.config.TerracottaConfiguration.ValueMode}
+     */
+    @Inject(optional = true)
+    void setTerracottaValueMode(@Named(EhCacheServiceConfig.TERRACOTTA_VALUE_MODE) String terracottaValueMode) {
+        if (config.getTerracottaConfiguration() == null) {
+            config.addTerracotta(new TerracottaConfiguration());
+        }
+        config.getTerracottaConfiguration().setValueMode(terracottaValueMode);
+    }
+
+    /**
+     * Sets coherent reads in the terracotta config and activates terracotta if not already done.
+     * @param terracottaCoherentReads true for coherent reads
+     */
     @Inject(optional = true)
     void setTerracottaCoherentReads(
         @Named(EhCacheServiceConfig.TERRACOTTA_COHERENT_READS) boolean terracottaCoherentReads) {
-        this.terracottaCoherentReads = terracottaCoherentReads;
+        if (config.getTerracottaConfiguration() == null) {
+            config.addTerracotta(new TerracottaConfiguration());
+        }
+        config.getTerracottaConfiguration().setCoherent(terracottaCoherentReads);
     }
 
     private MemoryStoreEvictionPolicy of(CacheMode mode) {
@@ -215,43 +249,43 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
     
     @Override
     public void initialize() {
+        config.setName(name);
+        config.setTimeToLiveSeconds(timeToLiveUnit.toSeconds(timeToLive));
+        config.setTimeToIdleSeconds(timeToIdleUnit.toSeconds(timeToIdle));
+        config.setDiskExpiryThreadIntervalSeconds(diskExpiryThreadIntervalUnit.toSeconds(diskExpiryThreadInterval));
+        config.validateCompleteConfiguration();
+
+        final TerracottaConfiguration terracottaConfiguration = config.getTerracottaConfiguration();
+        final boolean terracottaCoherent;
+        final TerracottaConfiguration.ValueMode terracottaValueMode;
+        if (terracottaConfiguration == null) {
+            terracottaCoherent = false;
+            terracottaValueMode = null;
+        } else {
+            terracottaCoherent = terracottaConfiguration.isCoherent();
+            terracottaValueMode = terracottaConfiguration.getValueMode();
+        }
+
         LOG.info("Ehcache: [clearOnFlush={}, diskExpiryThreadInterval={}, diskExpiryThreadIntervalUnit={}, " +
             "diskPersistent={}, diskSpoolBufferSizeMB={}, diskStorePath={}, eternal={}, isTerracottaClustered={}, " +
             "maxElementsInMemory={}, maxElementsOnDisk={}, memoryStoreEvictionPolicy={}, overflowToDisk={}, " +
             "terracottaCoherentReads={}, terracottaValueMode={}, timeToIdle={}, timeToIdleUnit={}, timeToLive={}, " +
             "timeToLiveUnit={}]", new Object[] {
-                clearOnFlush, diskExpiryThreadInterval, diskExpiryThreadIntervalUnit, diskPersistent,
-                diskSpoolBufferSizeMB, diskStorePath, eternal, isTerracottaClustered, maxElementsInMemory,
-                maxElementsOnDisk, memoryStoreEvictionPolicy, overflowToDisk, terracottaCoherentReads,
-                terracottaValueMode, timeToIdle, timeToIdleUnit, timeToLive, timeToLiveUnit
+                config.isClearOnFlush(), diskExpiryThreadInterval, diskExpiryThreadIntervalUnit,
+                config.isDiskPersistent(), config.getDiskSpoolBufferSizeMB(), config.getDiskStorePath(),
+                config.isEternal(), config.isTerracottaClustered(), config.getMaxElementsInMemory(),
+                config.getMaxElementsOnDisk(), config.getMemoryStoreEvictionPolicy(), config.isOverflowToDisk(),
+                terracottaCoherent, terracottaValueMode, timeToIdle, timeToIdleUnit, timeToLive, timeToLiveUnit
             }
         );
-        cache = new Cache(
-            name,
-            maxElementsInMemory,
-            memoryStoreEvictionPolicy,
-            overflowToDisk,
-            diskStorePath,
-            eternal, 
-            timeToLiveUnit.toSeconds(timeToLive),
-            timeToIdleUnit.toSeconds(timeToIdle),
-            diskPersistent,
-            diskExpiryThreadIntervalUnit.toSeconds(diskExpiryThreadInterval),
-            null,
-            null, 
-            maxElementsOnDisk,
-            diskSpoolBufferSizeMB,
-            clearOnFlush,
-            isTerracottaClustered,
-            terracottaValueMode,
-            terracottaCoherentReads
-        );
+
+        cache = new Cache(config);
         
         if (manager.cacheExists(name)) {
             manager.removeCache(name);
         }
         
-        manager.addCache(cache);
+        manager.addCache(name);
     }
     
     @Override
@@ -268,7 +302,7 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
         Preconditions.checkNotNull(maxAgeUnit, "MaxAge TimeUnit");
 
         final int maxAgeSeconds = (int) maxAgeUnit.toSeconds(maxAge);
-        final Element element = new Element(key, value, false, null, maxAgeSeconds);
+        final Element element = new Element(key, value, maxAgeSeconds == 0, null, maxAgeSeconds);
         cache.putQuiet(element);
     }
 

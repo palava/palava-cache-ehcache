@@ -29,6 +29,7 @@ import com.google.inject.name.Names;
 import de.cosmocode.palava.core.inject.AbstractRebindModule;
 import de.cosmocode.palava.core.inject.Config;
 import de.cosmocode.palava.core.inject.RebindModule;
+import net.sf.ehcache.config.CacheConfiguration;
 
 /**
  * <p> Binds the EhCacheService to the {@link CacheService}.
@@ -50,8 +51,8 @@ public final class EhCacheServiceModule implements Module {
      * 
      * <p>The following parameters must be set for the EhCacheService.</p>
      * <ul>
-     *   <li>cache.ehcache.overflowToDisk (boolean, if true, cache data flows from memory to disk)</li>
-     *   <li>cache.ehcache.eternal (boolean, if true then cached data live eternal)</li>
+     *   <li>cache.ehcache.name (a unique name for the cache)</li>
+     *   <li>cache.ehcache.maxElementsInMemory (int)</li>
      * </ul>
      * <p>Optional parameters are:</p>
      * <ul>
@@ -61,8 +62,9 @@ public final class EhCacheServiceModule implements Module {
      *   <li>cache.ehcache.diskPersistent (boolean)</li>
      *   <li>cache.ehcache.diskStorePath (file path)</li>
      *   <li>cache.ehcache.diskSpoolBufferSizeMB (int)</li>
-     *   <li>cache.ehcache.maxElementsInMemory (int)</li>
+     *   <li>cache.ehcache.eternal (boolean)</li>
      *   <li>cache.ehcache.maxElementsOnDisk (int)</li>
+     *   <li>cache.ehcache.overflowToDisk (boolean)</li>
      *   <li>cache.ehcache.cacheMode (one of LRU, LFU, FIFO)</li>
      *   <li>cache.ehcache.isTerracottaClustered (boolean)</li>
      *   <li>cache.ehcache.terracottaValueMode (one of SERIALIZATION, IDENTITY)</li>
@@ -117,12 +119,9 @@ public final class EhCacheServiceModule implements Module {
         @Override
         protected void configuration() {
             bind(String.class).annotatedWith(Names.named(EhCacheServiceConfig.NAME)).toInstance(name);
-            
-            bind(boolean.class).annotatedWith(Names.named(EhCacheServiceConfig.OVERFLOW_TO_DISK)).to(
-                Key.get(boolean.class, Names.named(config.prefixed(EhCacheServiceConfig.OVERFLOW_TO_DISK))));
-            
-            bind(boolean.class).annotatedWith(Names.named(EhCacheServiceConfig.ETERNAL)).to(
-                Key.get(boolean.class, Names.named(config.prefixed(EhCacheServiceConfig.ETERNAL))));
+
+            bind(int.class).annotatedWith(Names.named(EhCacheServiceConfig.MAX_ELEMENTS_IN_MEMORY)).to(
+                    Key.get(int.class, Names.named(config.prefixed(EhCacheServiceConfig.MAX_ELEMENTS_IN_MEMORY))));
         }
         
         @Override
@@ -146,11 +145,14 @@ public final class EhCacheServiceModule implements Module {
             bind(int.class).annotatedWith(Names.named(EhCacheServiceConfig.DISK_SPOOL_BUFFER_SIZE_MB)).to(
                 Key.get(int.class, Names.named(config.prefixed(EhCacheServiceConfig.DISK_SPOOL_BUFFER_SIZE_MB))));
 
-            bind(int.class).annotatedWith(Names.named(EhCacheServiceConfig.MAX_ELEMENTS_IN_MEMORY)).to(
-                Key.get(int.class, Names.named(config.prefixed(EhCacheServiceConfig.MAX_ELEMENTS_IN_MEMORY))));
+            bind(boolean.class).annotatedWith(Names.named(EhCacheServiceConfig.ETERNAL)).to(
+                Key.get(boolean.class, Names.named(config.prefixed(EhCacheServiceConfig.ETERNAL))));
 
             bind(int.class).annotatedWith(Names.named(EhCacheServiceConfig.MAX_ELEMENTS_ON_DISK)).to(
                 Key.get(int.class, Names.named(config.prefixed(EhCacheServiceConfig.MAX_ELEMENTS_ON_DISK))));
+
+            bind(boolean.class).annotatedWith(Names.named(EhCacheServiceConfig.OVERFLOW_TO_DISK)).to(
+                Key.get(boolean.class, Names.named(config.prefixed(EhCacheServiceConfig.OVERFLOW_TO_DISK))));
 
             bind(CacheMode.class).annotatedWith(Names.named(EhCacheServiceConfig.CACHE_MODE)).to(
                 Key.get(CacheMode.class, Names.named(config.prefixed(EhCacheServiceConfig.CACHE_MODE))));

@@ -17,6 +17,7 @@
 package de.cosmocode.palava.cache;
 
 import net.sf.ehcache.Status;
+import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
@@ -39,13 +40,13 @@ public class EhCacheServiceTest extends CacheServiceTest {
     }
 
     @Override
-    protected long sleepBeforeIdleTime() {
+    protected long sleepTimeBeforeIdleTimeout() {
         return 1;
     }
 
     @Override
-    protected long sleepTimeExpires() {
-        return 3;
+    protected long sleepTimeUntilExpired() {
+        return 4;
     }
 
     @Override
@@ -55,16 +56,42 @@ public class EhCacheServiceTest extends CacheServiceTest {
 
     @Override
     public CacheService unit() {
-        final EhCacheService service = new EhCacheService();
+        final EhCacheService service = new EhCacheService("testcache", 100);
         service.setTimeToIdle(1);
         service.setTimeToIdleUnit(TimeUnit.SECONDS);
         service.setTimeToLive(1);
         service.setTimeToLiveUnit(TimeUnit.SECONDS);
         service.initialize();
-        
+
         if (service.getCache().getStatus().equals(Status.STATUS_UNINITIALISED)) {
             service.getCache().initialise();
         }
         return service;
+    }
+
+    /**
+     * Tests every optional setter. Should throw no exception afterwards.
+     */
+    @Test
+    public void setOptionals() {
+        final EhCacheService service = new EhCacheService("testcache", 100);
+        service.setClearOnFlush(true);
+        service.setDiskExpiryThreadInterval(10);
+        service.setDiskExpiryThreadIntervalUnit(TimeUnit.MINUTES);
+        service.setDiskPersistent(false);
+        service.setDiskSpoolBufferSizeMB(50);
+        service.setDiskStorePath("/tmp");
+        service.setEternal(false);
+        service.setMaxElementsOnDisk(2000);
+        service.setMemoryStoreEvictionPolicy(CacheMode.FIFO);
+        service.setOverflowToDisk(false);
+        service.setTerracottaClustered(true);
+        service.setTerracottaCoherentReads(true);
+        service.setTerracottaValueMode("IDENTITY");
+        service.setTimeToIdle(1);
+        service.setTimeToIdleUnit(TimeUnit.SECONDS);
+        service.setTimeToLive(1);
+        service.setTimeToLiveUnit(TimeUnit.SECONDS);
+        service.initialize();
     }
 }
