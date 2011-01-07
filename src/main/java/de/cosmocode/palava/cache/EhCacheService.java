@@ -47,8 +47,6 @@ import de.cosmocode.palava.core.lifecycle.Initializable;
 final class EhCacheService implements CacheService, Initializable, Disposable {
 
     private static final Logger LOG = LoggerFactory.getLogger(EhCacheService.class);
-    
-    private static final String MAX_AGE_NEGATIVE = "Max age must not be negative, but was %s";
 
     private String name = "ehcache";
     
@@ -292,17 +290,6 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
     public void store(Serializable key, Object value) {
         Preconditions.checkNotNull(key, "Key");
         final Element element = new Element(key, value);
-        cache.putQuiet(element);
-    }
-    
-    @Override
-    public void store(Serializable key, Object value, long maxAge, TimeUnit maxAgeUnit) {
-        Preconditions.checkNotNull(key, "Key");
-        Preconditions.checkArgument(maxAge >= 0, MAX_AGE_NEGATIVE, maxAge);
-        Preconditions.checkNotNull(maxAgeUnit, "MaxAge TimeUnit");
-
-        final int maxAgeSeconds = (int) maxAgeUnit.toSeconds(maxAge);
-        final Element element = new Element(key, value, maxAgeSeconds == 0, null, maxAgeSeconds);
         cache.putQuiet(element);
     }
 
