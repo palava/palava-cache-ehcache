@@ -79,11 +79,20 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
     private CacheConfiguration config;
 
     @Inject
-    EhCacheService(
-            @Named(EhCacheServiceConfig.NAME) String name,
-            @Named(EhCacheServiceConfig.MAX_ELEMENTS_IN_MEMORY) int maxElementsInMemory) {
-        this.config = new CacheConfiguration(name, maxElementsInMemory);
+    EhCacheService(@Named(EhCacheServiceConfig.NAME) String name) {
         this.name = name;
+        if (manager.cacheExists(name)) {
+            this.config = manager.getCache(name).getCacheConfiguration();
+            timeToLive = this.config.getTimeToLiveSeconds();
+            timeToLiveUnit = TimeUnit.SECONDS;
+            timeToIdle = this.config.getTimeToIdleSeconds();
+            timeToIdleUnit = TimeUnit.SECONDS;
+            diskExpiryThreadInterval = this.config.getDiskExpiryThreadIntervalSeconds();
+            diskExpiryThreadIntervalUnit = TimeUnit.SECONDS;
+        } else {
+            this.config = new CacheConfiguration(name, 0);
+            this.config.setName(name);
+        }
     }
 
     @Inject(optional = true)
@@ -162,6 +171,15 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
     @Inject(optional = true)
     void setDiskStorePath(@Named(EhCacheServiceConfig.DISK_STORE_PATH) String diskStorePath) {
         config.setDiskStorePath(diskStorePath);
+    }
+
+    /**
+     * Sets the maximum number of elements in memory. 0 means unlimited.
+     * @param maxElementsInMemory maximum number of elements in memory
+     */
+    @Inject
+    void setMaxElementsInMemory(@Named(EhCacheServiceConfig.MAX_ELEMENTS_IN_MEMORY) int maxElementsInMemory) {
+        config.setMaxElementsInMemory(maxElementsInMemory);
     }
 
     /**
@@ -249,12 +267,23 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
     
     @Override
     public void initialize() {
-        config.setName(name);
         config.setTimeToLiveSeconds(timeToLiveUnit.toSeconds(timeToLive));
         config.setTimeToIdleSeconds(timeToIdleUnit.toSeconds(timeToIdle));
         config.setDiskExpiryThreadIntervalSeconds(diskExpiryThreadIntervalUnit.toSeconds(diskExpiryThreadInterval));
         config.validateCompleteConfiguration();
 
+        logConfiguredValues();
+
+        if (!manager.cacheExists(name)) {
+            cache = new Cache(config);
+            cache.initialise();
+            manager.addCache(name);
+        } else {
+            cache = manager.getCache(name);
+        }
+    }
+
+    private void logConfiguredValues() {
         final TerracottaConfiguration terracottaConfiguration = config.getTerracottaConfiguration();
         final boolean terracottaCoherent;
         final TerracottaConfiguration.ValueMode terracottaValueMode;
@@ -278,14 +307,6 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
                 terracottaCoherent, terracottaValueMode, timeToIdle, timeToIdleUnit, timeToLive, timeToLiveUnit
             }
         );
-
-        cache = new Cache(config);
-        
-        if (manager.cacheExists(name)) {
-            manager.removeCache(name);
-        }
-        
-        manager.addCache(name);
     }
 
     @Override

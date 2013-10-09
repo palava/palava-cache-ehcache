@@ -16,8 +16,11 @@
 
 package de.cosmocode.palava.cache;
 
+import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
+import junit.framework.Assert;
+import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Status;
 
 import org.junit.Test;
@@ -32,17 +35,24 @@ public class EhCacheServiceTest extends CacheServiceTest {
 
     @Override
     public CacheService unit() {
-        final EhCacheService service = new EhCacheService("testcache", 100);
+        final EhCacheService service = new EhCacheService("testcache");
         service.setTimeToIdle(1);
         service.setTimeToIdleUnit(TimeUnit.SECONDS);
         service.setTimeToLive(1);
         service.setTimeToLiveUnit(TimeUnit.SECONDS);
         service.initialize();
 
-        if (service.getCache().getStatus().equals(Status.STATUS_UNINITIALISED)) {
-            service.getCache().initialise();
-        }
         return service;
+    }
+
+    @Test
+    public void fromFile() {
+        // create one service configured from xml
+        final EhCacheService fromXml = new EhCacheService("testFromXml");
+        fromXml.initialize();
+        fromXml.store("bla", "blubb");
+        final String actual = fromXml.read("bla");
+        Assert.assertEquals("blubb", actual);
     }
 
     /**
@@ -50,7 +60,7 @@ public class EhCacheServiceTest extends CacheServiceTest {
      */
     @Test
     public void setOptionals() {
-        final EhCacheService service = new EhCacheService("testcache", 100);
+        final EhCacheService service = new EhCacheService("configuredtestcache");
         service.setClearOnFlush(true);
         service.setDiskExpiryThreadInterval(10);
         service.setDiskExpiryThreadIntervalUnit(TimeUnit.MINUTES);
@@ -61,8 +71,8 @@ public class EhCacheServiceTest extends CacheServiceTest {
         service.setMaxElementsOnDisk(2000);
         service.setMemoryStoreEvictionPolicy(CacheMode.FIFO);
         service.setOverflowToDisk(false);
-        service.setTerracottaClustered(true);
-        service.setTerracottaCoherentReads(true);
+        service.setTerracottaClustered(false);
+        service.setTerracottaCoherentReads(false);
         service.setTerracottaValueMode("IDENTITY");
         service.setTimeToIdle(1);
         service.setTimeToIdleUnit(TimeUnit.SECONDS);

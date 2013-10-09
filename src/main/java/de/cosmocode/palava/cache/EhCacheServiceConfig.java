@@ -24,6 +24,8 @@ package de.cosmocode.palava.cache;
 final class EhCacheServiceConfig {
 
     public static final String PREFIX = CacheConfig.PREFIX + "ehcache.";
+
+    public static final String CONFIG_FILE = PREFIX + "configFile";
     
     public static final String NAME = PREFIX + "name";
     
