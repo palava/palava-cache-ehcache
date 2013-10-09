@@ -31,31 +31,6 @@ import org.junit.Test;
 public class EhCacheServiceTest extends CacheServiceTest {
 
     @Override
-    protected long lifeTime() {
-        return 2;
-    }
-
-    @Override
-    protected long idleTime() {
-        return 2;
-    }
-
-    @Override
-    protected long sleepTimeBeforeIdleTimeout() {
-        return 1;
-    }
-
-    @Override
-    protected long sleepTimeUntilExpired() {
-        return 4;
-    }
-
-    @Override
-    protected TimeUnit timeUnit() {
-        return TimeUnit.SECONDS;
-    }
-
-    @Override
     public CacheService unit() {
         final EhCacheService service = new EhCacheService("testcache", 100);
         service.setTimeToIdle(1);
