@@ -177,7 +177,7 @@ final class EhCacheService implements CacheService, Initializable, Disposable {
      * Sets the maximum number of elements in memory. 0 means unlimited.
      * @param maxElementsInMemory maximum number of elements in memory
      */
-    @Inject
+    @Inject(optional = true)
     void setMaxElementsInMemory(@Named(EhCacheServiceConfig.MAX_ELEMENTS_IN_MEMORY) int maxElementsInMemory) {
         config.setMaxElementsInMemory(maxElementsInMemory);
     }
